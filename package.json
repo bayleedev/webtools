@@ -1,6 +1,6 @@
 {
-  "name": "material-dashboard",
-  "homepage": "/material-dashboard",
+  "name": "webtools",
+  "homepage": "/webtools",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -20,7 +20,7 @@
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages --no-history --dist build",
-    "start": "PORT=3125 react-scripts start",
+    "start": "PORT=3127 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
