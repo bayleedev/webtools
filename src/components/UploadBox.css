@@ -1,0 +1,13 @@
+.filedrop {
+    width: 400px;
+    height: 300px;
+    margin: 10px 0;
+    padding: 50px;
+    text-align: center;
+    border: 5px solid #000;
+    background: #99CCFF;
+}
+
+.filedrop.active {
+    border: 5px solid green;
+}
