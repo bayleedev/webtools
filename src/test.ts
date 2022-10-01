@@ -16,11 +16,12 @@ const assert = (value: any, msg: string, data?: any) => {
 const assertObjectsEqual = (value_1: any, value_2: any, msg: string, data?: any) => {
   const value_1_string = JSON.stringify(value_1, null, '\t')
   const value_2_string = JSON.stringify(value_2, null, '\t')
-  return assert(value_1_string === value_2_string, msg, {
-    value_1_string: inspect(value_1),
-    value_2_string: inspect(value_2),
+  const assertValue = value_1_string === value_2_string
+  return assert(assertValue, msg, (assertValue || {
+    value_1_string: inspect(value_1, { depth: null }),
+    value_2_string: inspect(value_2, { depth: null }),
     ...data
-  })
+  }))
 }
 
 const removeSubset = (largeString: string, sample: string) => {
@@ -33,19 +34,34 @@ const removeSubset = (largeString: string, sample: string) => {
 type KeyValueObj = Record<string, string[]>
 type ParseReturn = Record<string, KeyValueObj[]>
 
+const badLine = /^.+;.+=.+:.+$/
+
 const lineParse = (input: string): KeyValueObj => {
   const lines: string[] = input.trim().split('\n')
+  let followerKey: string = ''
   return lines.reduce((acc: KeyValueObj, line: string): KeyValueObj => {
-    const [key, value] = line.split(':')
-    if (['BEGIN', 'END'].includes(key)) {
+    if (line.match(badLine)) {
+      return acc
+    }
+    const matches = line.match(/^(?<key>[A-Z]+):(?<value>.*)$/)
+    let key, value;
+    if (!matches || !matches.groups) {
+      key = followerKey
+      value = line
+    } else {
+      key = matches.groups.key
+      value = matches.groups.value
+    }
+    if (['BEGIN', 'END'].includes(key) || !value) {
       return acc
     }
     const oldValue = acc[key] || []
+    followerKey = key
     return {
       ...acc,
       [key]: [
-        value,
         ...oldValue,
+        value,
       ]
     }
   }, {})
@@ -62,7 +78,7 @@ const parse = (input: string): ParseReturn => {
     if (found) {
       const fullKey = found[1]
       acc[fullKey] = acc[fullKey] || []
-      acc[fullKey].push(lineParse(currMatch))
+      acc[fullKey].unshift(lineParse(currMatch))
     }
     return acc
   }, {})
@@ -105,9 +121,9 @@ END:MEOW`
 
   const expectedOutput = {
     RUFF: [{
-      VERSION: ['3'],
-    }, {
       VERSION: ['4'],
+    }, {
+      VERSION: ['3'],
     }],
     MEOW: [{
       VERSION: ['2'],
@@ -119,6 +135,42 @@ END:MEOW`
   assertObjectsEqual(parse(input), expectedOutput, 'test_basic_io')
 }
 
+const test_sample_isc = () => {
+  const input = `
+BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+CLASS:PUBLIC
+DESCRIPTION:Foobar\nDate and Time - Sep 30\\, 2022 12:00 AM to 12:00 AM\nVenue - 1111 Winchester Blvd\\, Portland OR\\, 97232\nfoobaz\n
+DTSTART:20220930T070000Z
+DTEND:20220930T070000Z
+LOCATION:1111 Winchester Blvd, Portland OR, 97232
+SUMMARY;LANGUAGE=en-us:Foobar
+END:VEVENT
+END:VCALENDAR`
+  const expectedOutput = {
+    VEVENT: [{
+      CLASS: ['PUBLIC'],
+      DESCRIPTION: [
+        'Foobar',
+        'Date and Time - Sep 30\\, 2022 12:00 AM to 12:00 AM',
+        'Venue - 1111 Winchester Blvd\\, Portland OR\\, 97232',
+        'foobaz'
+      ],
+      DTSTART: ['20220930T070000Z'],
+      DTEND: ['20220930T070000Z'],
+      LOCATION: ['1111 Winchester Blvd, Portland OR, 97232'],
+    }],
+    VCALENDAR: [{
+      VERSION: ['2.0'],
+    }],
+  }
+
+  const actualOutput = parse(input)
+  assertObjectsEqual(actualOutput, expectedOutput, 'test_sample_isc')
+}
+
+test_sample_isc()
 test_basic_io()
 test_parse_line()
 
