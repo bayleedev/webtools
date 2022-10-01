@@ -11,16 +11,16 @@ const assert = (value: any, msg: string, data?: any) => {
   }
 }
 
-type FN_TYPE<A, R> = (arg: A) => Promise<R>
+type FN_TYPE<A extends any[], R> = (...arg: A) => Promise<R>
 
-const retry = <A, R>(oleUnreliableFn: FN_TYPE<A, R>, retries: number): FN_TYPE<A, R> => {
-  return (arg: A) => {
+const retry = <A extends any[], R>(oleUnreliableFn: FN_TYPE<A, R>, retries: number): FN_TYPE<A, R> => {
+  return (...arg: A) => {
     if (retries < 1) {
-      return oleUnreliableFn(arg)
+      return oleUnreliableFn(...arg)
     }
-    return oleUnreliableFn(arg).catch((e: any) => {
+    return oleUnreliableFn(...arg).catch((e: any) => {
       const nextRetryFn: FN_TYPE<A, R> = retry(oleUnreliableFn, retries-1)
-      return nextRetryFn(arg)
+      return nextRetryFn(...arg)
     })
   }
 }
@@ -32,7 +32,7 @@ const test_always_ok = () => {
     })
   }
 
-  const reliableHttpCall: FN_TYPE<boolean, number> = retry(unreliableHttpCall, 3)
+  const reliableHttpCall: FN_TYPE<[boolean], number> = retry(unreliableHttpCall, 3)
 
   reliableHttpCall(true).then((result: number) => {
     assert(true, 'test_always_ok')
@@ -47,7 +47,7 @@ const test_always_throw = () => {
       throw Error('503 Server Error')
     })
   }
-  const reliableHttpCall: FN_TYPE<boolean, number> = retry(unreliableHttpCall, 3)
+  const reliableHttpCall: FN_TYPE<[boolean], number> = retry(unreliableHttpCall, 3)
   reliableHttpCall(true).then((result: number) => {
     assert(false, 'test_always_throw')
   }).catch((e) => {
@@ -64,7 +64,7 @@ const test_retry_count = () => {
     })
   }
   const numberOfRetries = 3
-  const reliableHttpCall: FN_TYPE<boolean, number> = retry(unreliableHttpCall, numberOfRetries)
+  const reliableHttpCall: FN_TYPE<[boolean], number> = retry(unreliableHttpCall, numberOfRetries)
   reliableHttpCall(true).then((result: number) => {
     assert(false, 'test_retry_count')
   }).catch((e) => {
@@ -87,7 +87,7 @@ const test_fail_once_then_success = () => {
       resolve(200)
     })
   }
-  const reliableHttpCall: FN_TYPE<boolean, number> = retry(unreliableHttpCall, 100)
+  const reliableHttpCall: FN_TYPE<[boolean], number> = retry(unreliableHttpCall, 100)
 
   reliableHttpCall(true).finally(() => {
     assert(numberOfResolves === 1 && numberOfThrows === 1, 'test_fail_once_then_success', {
@@ -111,7 +111,7 @@ const test_different_fn_signature = () => {
     })
   }
 
-  const reliableHttpCall: FN_TYPE<string, Response> = retry(unreliableHttpCall, 100)
+  const reliableHttpCall: FN_TYPE<[string], Response> = retry(unreliableHttpCall, 100)
 
   reliableHttpCall('google.com').then((result: Response) => {
     assert(true, 'test_different_fn_signature')
@@ -120,10 +120,58 @@ const test_different_fn_signature = () => {
   })
 }
 
+const test_multi_argument_signature = () => {
+  interface Response {
+    status: number
+    body: string
+  }
+  const unreliableHttpCall = (url: string, headers: any): Promise<Response> => {
+    return new Promise((resolve, reject) => {
+      resolve({
+        status: 200,
+        body: 'hello world',
+      } as Response)
+    })
+  }
+
+  const reliableHttpCall: FN_TYPE<[string, any], Response> = retry(unreliableHttpCall, 100)
+
+  reliableHttpCall('google.com', { 'Accept': 'text/html' }).then(() => {
+    assert(true, 'test_multi_argument_signature')
+  }).catch(() => {
+    assert(false, 'test_multi_argument_signature')
+  })
+}
+
+const test_no_argument_signature = () => {
+  interface Response {
+    status: number
+    body: string
+  }
+  const unreliableHttpCall = (): Promise<Response> => {
+    return new Promise((resolve, reject) => {
+      resolve({
+        status: 200,
+        body: 'hello world',
+      } as Response)
+    })
+  }
+
+  const reliableHttpCall: FN_TYPE<[], Response> = retry(unreliableHttpCall, 100)
+
+  reliableHttpCall().then(() => {
+    assert(true, 'test_no_argument_signature')
+  }).catch(() => {
+    assert(false, 'test_no_argument_signature')
+  })
+}
+
 test_always_ok()
 test_always_throw()
 test_retry_count()
 test_fail_once_then_success()
 test_different_fn_signature()
+test_multi_argument_signature()
+test_no_argument_signature()
 
 export {}
