@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { FiDownload } from 'react-icons/fi';
+
 import './UploadBox.css';
 import {
   SyntheticChangeEvent,
@@ -68,6 +70,10 @@ export const UploadBox = (props: UploadBoxProps) => {
         onDragOver={e => handleDragOver(e)}
         onDragLeave={e => handleDragLeave(e)}
         className={klasses.join(' ')}>
+        <div className="instructions">
+          <FiDownload className="drop-icon" />
+          <p>Click "Choose File" or drop it here</p>
+        </div>
         <input
           onChange={handleOnChange}
           type="file" />

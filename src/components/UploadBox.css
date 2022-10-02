@@ -1,13 +1,23 @@
 .filedrop {
-    width: 400px;
+    width: 100%;
     height: 300px;
     margin: 10px 0;
     padding: 50px;
     text-align: center;
-    border: 5px solid #000;
-    background: #99CCFF;
+    border: 5px solid #04bde4;
+    border-radius: 10px;
+    background-image: linear-gradient(to right, #ff6e7f, #bfe9ff);
+    color: black;
 }
 
 .filedrop.active {
-    border: 5px solid green;
+    border-color: #b0ebf7;
+}
+
+.instructions {
+    margin-bottom: 75px;
+}
+.instructions .drop-icon {
+    font-size: 35px;
+    position: relative;
 }

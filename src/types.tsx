@@ -15,3 +15,12 @@ export interface SyntheticChangeEvent extends SyntheticEvent {
     files: any
   }
 }
+
+export interface GoogleCalendarLink {
+  action: string
+  startTime: string
+  endTime: string
+  details: string
+  location: string
+  text: string
+}

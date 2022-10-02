@@ -7,7 +7,7 @@ export interface Link {
 
 export interface TopBarProps {
   breadcrumbs: Link[];
-  title: string
+  title: JSX.Element | string
 }
 
 export const TopBar = (props: TopBarProps) => {
