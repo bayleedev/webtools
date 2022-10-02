@@ -1,36 +1,31 @@
 import React from 'react';
-import { useRoute, Link as WouterLink } from 'wouter';
+import { useLocation, Link as RouterLink } from 'react-router-dom';
 
 export interface LinkProps {
-  href: string
+  to: string
+  activeClassName: string
   className: string
-  activeClass: string
-  inactiveClass: string
   children: any
-  onClick?: (e: any) => void
 }
 
 export const Link = (props: LinkProps) => {
-  const [isActive] = useRoute(props.href);
+  const { pathname } = useLocation();
 
-  const handleOnClick = (e: any) => {
-    if (props.onClick) {
-      return props.onClick(e)
-    }
-  }
+  const isActive = pathname === props.to
 
   const className = [
     props.className,
-    isActive ? props.activeClass : props.inactiveClass
+    isActive ? props.activeClassName : '',
   ].join(' ')
 
   return (
-    <WouterLink
-      href={props.href}
-      className={className}
-      onClick={handleOnClick}
-    >
-      {props.children}
-    </WouterLink>
+    <>
+      <RouterLink
+        to={props.to}
+        className={className}
+      >
+        {props.children}
+      </RouterLink>
+    </>
   );
 }

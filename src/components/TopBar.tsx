@@ -20,13 +20,13 @@ export const TopBar = (props: TopBarProps) => {
               const { href, label } = breadcrumb
               if (href) {
                 return (
-                  <li className="breadcrumb-item text-sm">
+                  <li key={href} className="breadcrumb-item text-sm">
                     <a className="opacity-5 text-dark" href={href}>{label}</a>
                   </li>
                 )
               }
               return (
-                <li className="breadcrumb-item text-sm text-dark active" aria-current="page">
+                <li key={href} className="breadcrumb-item text-sm text-dark active" aria-current="page">
                   {label}
                 </li>
               )

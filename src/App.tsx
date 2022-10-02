@@ -1,5 +1,9 @@
 import React from 'react';
-import { Router, Route } from 'wouter';
+import {
+  HashRouter as Router,
+  Routes,
+  Route,
+} from "react-router-dom";
 import { GoTools } from 'react-icons/go';
 import { GiFairy } from 'react-icons/gi';
 
@@ -15,7 +19,7 @@ export interface AppProps {
 
 export const App = (props: AppProps) => {
   return (
-    <>
+    <Router>
       <Sidebar />
       <main className="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
         <TopBar
@@ -29,21 +33,17 @@ export const App = (props: AppProps) => {
             {
               label: <><GiFairy />{' '}<span>Baylee Dev</span></>,
               href: "https://baylee.dev"
-            } as Link 
+            } as Link
           ]}
         />
         <div className="container-fluid py-4">
-          <Router base="/webtools">
-            <Route path="/">
-              <Home />
-            </Route>
-            <Route path="/ics">
-              <ICSTool />
-            </Route>
-          </Router>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/ics" element={<ICSTool />} />
+          </Routes>
           <Footer />
         </div>
       </main>
-    </>
+    </Router>
   );
 }

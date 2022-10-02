@@ -12,6 +12,7 @@ export interface ICSToolProps {
 export const ICSTool = (props: ICSToolProps) => {
   const [googleInfo, setGoogleInfo] = useState<GoogleCalendarLink | false>(false);
   const onHandleFile = (fileContents: string) => {
+    setGoogleInfo(false)
     debugger
   }
   return (

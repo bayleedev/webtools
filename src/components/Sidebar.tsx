@@ -24,9 +24,8 @@ export const Sidebar = (props: SidebarProps) => {
         <ul className="navbar-nav">
           <li className="nav-item">
             <Link
-              href="/webtools"
-              activeClass="active"
-              inactiveClass="inactive"
+              to="/"
+              activeClassName="active"
               className="nav-link text-white"
             >
               <AiFillHome />
@@ -35,9 +34,8 @@ export const Sidebar = (props: SidebarProps) => {
           </li>
           <li className="nav-item">
             <Link
-              href="/webtools/ics"
-              activeClass="active"
-              inactiveClass="inactive"
+              to="/ics"
+              activeClassName="active"
               className="nav-link text-white"
             >
               <BsFillCalendarDateFill />
