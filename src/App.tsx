@@ -11,6 +11,7 @@ import { Sidebar } from './components/Sidebar';
 import { Footer } from './components/Footer';
 import { TopBar, Link } from './components/TopBar';
 import { ICSTool } from './pages/ICSTool';
+import { PNGTool } from './pages/PNGTool';
 import { Home } from './pages/Home';
 import './App.css';
 
@@ -40,6 +41,7 @@ export const App = (props: AppProps) => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/ics" element={<ICSTool />} />
+            <Route path="/png" element={<PNGTool />} />
           </Routes>
           <Footer />
         </div>
