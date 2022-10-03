@@ -5,7 +5,7 @@ import './UploadBox.css';
 import {
   SyntheticChangeEvent,
   SyntheticDropEvent,
-  SyntheticEvent
+  SyntheticDragEvent,
 } from '../types';
 
 export interface UploadBoxProps {
@@ -13,26 +13,49 @@ export interface UploadBoxProps {
   handleFile: (fileContents: string) => void
 }
 
+declare global {
+  interface Window {
+    ImageDecoder?: any;
+    fullValue: Uint8Array
+  }
+}
+
 const decodeFile = (file: any): Promise<string> => {
   const reader = file.stream().getReader();
-  return reader.read().then(({done, value}: {done: boolean, value: any}) => {
-    if (!done) {
-      console.error("I never made it this far...")
+  const items: Uint8Array[] = []
+  const processText = ({done, value}: {done: boolean, value: any}) => {
+    if (done) {
+      const fullValue = items.reduce((memo: Uint8Array, item: Uint8Array): Uint8Array => {
+        const nextMemo = new Uint8Array(memo.length + item.length)
+        nextMemo.set(memo)
+        nextMemo.set(item, memo.length)
+        return nextMemo
+      }, new Uint8Array())
+      const imageDecoder = new window.ImageDecoder({
+        type: "image/png",
+        data: fullValue,
+      })
+      return imageDecoder.decode({frameIndex: 0}).then((data: any) => {
+        return data.image
+      })
     }
-    return new TextDecoder().decode(value)
-  })
+    items.push(value)
+    return reader.read().then(processText)
+
+  }
+  return reader.read().then(processText)
 }
 
 export const UploadBox = (props: UploadBoxProps) => {
   const [klasses, setKlasses] = useState<string[]>(['filedrop'])
-  const handleDragLeave = (e: SyntheticEvent) => {
+  const handleDragLeave = (e: SyntheticDragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (klasses.includes('active')) {
       setKlasses(['filedrop'])
     }
   };
-  const handleDragOver = (e: SyntheticEvent) => {
+  const handleDragOver = (e: SyntheticDragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!klasses.includes('active')) {
@@ -55,7 +78,6 @@ export const UploadBox = (props: UploadBoxProps) => {
   };
   const handleOnChange = (e: SyntheticChangeEvent) => {
     const selectedFile = e.target.files[0]
-
     if (selectedFile.type.match(props.fileType)) {
       decodeFile(selectedFile).then((data: string) => {
         props.handleFile(data)
