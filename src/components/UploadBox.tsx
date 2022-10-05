@@ -1,103 +1,89 @@
-import React, { useState } from 'react';
+import React, { useCallback,useEffect, useState } from 'react';
 import { FiDownload } from 'react-icons/fi';
 
-import './UploadBox.css';
+import { decodeFile } from '../util/Image';
 import {
+  ClipEvent,
+  DataTransfer,
   SyntheticChangeEvent,
   SyntheticDropEvent,
-  SyntheticDragEvent,
+  VideoFrame,
 } from '../types';
 
+import './UploadBox.css';
+
 export interface UploadBoxProps {
-  fileType: string
-  handleFile: (fileContents: string) => void
-}
-
-declare global {
-  interface Window {
-    ImageDecoder?: any;
-    fullValue: Uint8Array
-  }
-}
-
-const decodeFile = (file: any): Promise<string> => {
-  const reader = file.stream().getReader();
-  const items: Uint8Array[] = []
-  const processText = ({done, value}: {done: boolean, value: any}) => {
-    if (done) {
-      const fullValue = items.reduce((memo: Uint8Array, item: Uint8Array): Uint8Array => {
-        const nextMemo = new Uint8Array(memo.length + item.length)
-        nextMemo.set(memo)
-        nextMemo.set(item, memo.length)
-        return nextMemo
-      }, new Uint8Array())
-      const imageDecoder = new window.ImageDecoder({
-        type: "image/png",
-        data: fullValue,
-      })
-      return imageDecoder.decode({frameIndex: 0}).then((data: any) => {
-        return data.image
-      })
-    }
-    items.push(value)
-    return reader.read().then(processText)
-
-  }
-  return reader.read().then(processText)
+  allowedFileType: string|RegExp
+  handleUpload: (fileContents: VideoFrame) => void
+  handleError?: (error: Error) => void
+  handleUploadStart?: (start: true) => void
 }
 
 export const UploadBox = (props: UploadBoxProps) => {
   const [klasses, setKlasses] = useState<string[]>(['filedrop'])
-  const handleDragLeave = (e: SyntheticDragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (klasses.includes('active')) {
-      setKlasses(['filedrop'])
-    }
-  };
-  const handleDragOver = (e: SyntheticDragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!klasses.includes('active')) {
-      setKlasses(['filedrop', 'active'])
-    }
-  };
-  const handleDrop = (e: SyntheticDropEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (klasses.includes('active')) {
-      setKlasses(['filedrop'])
-    }
-    const selectedFile = e.dataTransfer.files[0]
+  const {
+    handleError,
+    handleUpload,
+    handleUploadStart,
+    allowedFileType,
+  } = props
 
-    if (selectedFile.type.match(props.fileType)) {
-      decodeFile(e.dataTransfer.files[0]).then((data: string) => {
-        props.handleFile(data)
+  const handleDataTransfer = useCallback((dataTransfer: DataTransfer) => {
+    if (handleUploadStart) {
+      handleUploadStart(true)
+    }
+    const selectedFile = dataTransfer.files[0]
+    if (dataTransfer.files.length > 1 && handleError) {
+        handleError(new Error('Only reading 1 file, total: ' + dataTransfer.files.length))
+    }
+    if (selectedFile.type.match(allowedFileType)) {
+      decodeFile(dataTransfer.files[0]).then((fileFrames: VideoFrame[]) => {
+        if (fileFrames.length > 1 && handleError) {
+          handleError(new Error('Only reading 1 frame, total: ' + fileFrames.length))
+        }
+        handleUpload(fileFrames[0])
       })
     }
-  };
-  const handleOnChange = (e: SyntheticChangeEvent) => {
-    const selectedFile = e.target.files[0]
-    if (selectedFile.type.match(props.fileType)) {
-      decodeFile(selectedFile).then((data: string) => {
-        props.handleFile(data)
-      })
+  }, [allowedFileType, handleUploadStart, handleUpload, handleError])
+
+  useEffect(() => {
+    const handlePaste = (e: any|ClipEvent) => {
+      handleDataTransfer(e.dataTransfer)
     }
-  }
+    window.addEventListener('paste', handlePaste);
+    return () => {
+      window.removeEventListener('paste', handlePaste)
+    }
+  }, [handleDataTransfer])
 
   return (
     <>
       <div
-        onDrop={e => handleDrop(e)}
-        onDragOver={e => handleDragOver(e)}
-        onDragLeave={e => handleDragLeave(e)}
+        onDrop={(e: SyntheticDropEvent) => {
+          if (klasses.includes('active')) {
+            setKlasses(['filedrop'])
+          }
+          handleDataTransfer(e.dataTransfer)
+        }}
+        onDragOver={() => {
+          if (!klasses.includes('active')) {
+            setKlasses(['filedrop', 'active'])
+          }
+        }}
+        onDragLeave={() => {
+          if (klasses.includes('active')) {
+            setKlasses(['filedrop'])
+          }
+        }}
         className={klasses.join(' ')}>
         <div className="instructions">
           <FiDownload className="drop-icon" />
           <p>Click "Choose File" or drop it here</p>
         </div>
         <input
-          onChange={handleOnChange}
+          onChange={(e: SyntheticChangeEvent) => {
+            handleDataTransfer(e.target)
+          }}
           type="file" />
       </div>
     </>

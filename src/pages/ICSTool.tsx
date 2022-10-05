@@ -11,7 +11,7 @@ export interface ICSToolProps {
 
 export const ICSTool = (props: ICSToolProps) => {
   const [googleInfo, setGoogleInfo] = useState<GoogleCalendarLink | false>(false);
-  const onHandleFile = (fileContents: string) => {
+  const onHandleFile = (fileContents: any) => {
     setGoogleInfo(false)
     debugger
   }
@@ -37,8 +37,8 @@ export const ICSTool = (props: ICSToolProps) => {
           based on the file that adds the event to your <span>Google Calendar</span>
         </p>
         <UploadBox
-          fileType={"text/calendar"}
-          handleFile={onHandleFile}
+          allowedFileType={"text/calendar"}
+          handleUpload={onHandleFile}
         />
       </ContentBox>
       { googleInfo !== false && (

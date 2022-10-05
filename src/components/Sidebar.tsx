@@ -3,6 +3,7 @@ import { Link } from './Link';
 import { AiFillHome } from 'react-icons/ai';
 import { BsFillCalendarDateFill } from 'react-icons/bs';
 import { GoTools } from 'react-icons/go';
+import { MdPhotoLibrary } from 'react-icons/md';
 
 import './Sidebar.css';
 
@@ -40,6 +41,16 @@ export const Sidebar = (props: SidebarProps) => {
             >
               <BsFillCalendarDateFill />
               <span className="nav-link-text ms-1">ICS Convertor</span>
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link
+              to="/png"
+              activeClassName="active"
+              className="nav-link text-white"
+            >
+              <MdPhotoLibrary />
+              <span className="nav-link-text ms-1">PNG Tools</span>
             </Link>
           </li>
         </ul>
