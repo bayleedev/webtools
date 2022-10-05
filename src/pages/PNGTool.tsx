@@ -16,7 +16,9 @@ class PNGFaye {
   constructor (canvas: HTMLCanvasElement, fileContents: CanvasVideoFrame) {
     this.canvas = canvas
     this.fileContents = fileContents
-    this.context = this.canvas.getContext('2d')
+    this.context = this.canvas.getContext('2d', {
+      willReadFrequently: true
+    })
   }
 
   draw () {
@@ -43,6 +45,40 @@ class PNGFaye {
       if (newTab) {
         newTab.document.write("<img src='" + dataURL + "' alt='from canvas'/>");
       }
+    }
+  }
+
+  inBounds (pixel: SelectedPixel) {
+    if (pixel.x >= 0 && pixel.x <= this.fileContents.displayWidth) {
+      if (pixel.y >= 0 && pixel.y <= this.fileContents.displayHeight) {
+        return true
+      }
+    }
+    return false
+  }
+
+  deleteMagic (pixel: SelectedPixel, _colorMatch?: ImageData) {
+    if (!this.context) {
+      throw Error('Context not found')
+    }
+    if (!this.inBounds(pixel)) {
+      return false
+    }
+    const currentColor = this.context.getImageData(pixel.x, pixel.y, 1, 1)
+    const colorMatch = _colorMatch || currentColor
+    const colorMatches = (a: ImageData, b: ImageData) => {
+      if (a.data[0] !== b.data[0]) return false
+      if (a.data[1] !== b.data[1]) return false
+      if (a.data[2] !== b.data[2]) return false
+      return true
+    }
+    if (colorMatches(currentColor, colorMatch)) {
+      currentColor.data[3] = 0
+      this.context.putImageData(currentColor, pixel.x, pixel.y)
+      this.deleteMagic({ x: pixel.x - 1, y: pixel.y }, colorMatch)
+      this.deleteMagic({ x: pixel.x + 1, y: pixel.y }, colorMatch)
+      this.deleteMagic({ x: pixel.x, y: pixel.y - 1 }, colorMatch)
+      this.deleteMagic({ x: pixel.x, y: pixel.y + 1 }, colorMatch)
     }
   }
 
@@ -146,7 +182,18 @@ export const PNGTool = (props: PNGToolProps) => {
               type="button"
               className="btn btn-primary"
             >
-              Make selected transparent
+              Make selected color transparent
+            </button>
+            <button
+              onClick={() => {
+                if (faye && selectedPixel) {
+                  faye.deleteMagic(selectedPixel)
+                }
+              }}
+              type="button"
+              className="btn btn-primary"
+            >
+              Make selected range transparent
             </button>
             <button
               onClick={() => {
