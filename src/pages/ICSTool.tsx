@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { BsFillCalendarDateFill } from 'react-icons/bs';
+import ical from 'ical-chrome'
 
 import { ContentBox } from '../components/ContentBox';
 import { UploadBox } from '../components/UploadBox';
@@ -11,8 +12,23 @@ export interface ICSToolProps {
 
 export const ICSTool = (props: ICSToolProps) => {
   const [googleInfo, setGoogleInfo] = useState<GoogleCalendarLink | false>(false);
+  const calendar = `
+BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+CLASS:PUBLIC
+DESCRIPTION:Foobar\nDate and Time - Sep 30\, 2022 12:00 AM to 12:00 AM\nVenue - 1111 Winchester Blvd\, Portland OR\, 97232\nfoobaz\nSUMMARY: meow\nLOCATION: rawr\n
+DTSTART:20220930T070000Z
+DTEND:20220930T070000Z
+LOCATION:1111 Winchester Blvd, Portland OR, 97232
+SUMMARY;LANGUAGE=en-us:Foobar
+END:VEVENT
+END:VCALENDAR`
+  const foo = ical.parseICS(calendar)
+  console.log(foo)
   const onHandleFile = (fileContents: any) => {
     setGoogleInfo(false)
+    console.log(fileContents)
     debugger
   }
   return (
