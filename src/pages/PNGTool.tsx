@@ -4,6 +4,9 @@ import { ContentBox } from '../components/ContentBox';
 import { UploadBox } from '../components/UploadBox';
 import { ClickEvent, Loading, VideoFrame, CanvasVideoFrame } from '../types';
 import { MdSaveAlt } from 'react-icons/md';
+import { BiCrop } from 'react-icons/bi';
+import { GiOrange } from 'react-icons/gi';
+import { RiGhostSmileLine } from 'react-icons/ri';
 import './PNGTool.css';
 
 export interface PNGToolProps {
@@ -211,7 +214,7 @@ export const PNGTool = (props: PNGToolProps) => {
               type="button"
               className="btn btn-info"
             >
-              Transparent Selected Color
+              <RiGhostSmileLine /> Transparent Selected Color
             </button>
             <button
               onClick={() => {
@@ -222,7 +225,18 @@ export const PNGTool = (props: PNGToolProps) => {
               type="button"
               className="btn btn-info"
             >
-              Transparent Selected Range
+              <GiOrange /> Transparent Selected Range
+            </button>
+            <button
+              onClick={() => {
+                if (faye) {
+                  alert('Greedy bastard...')
+                }
+              }}
+              type="button"
+              className="btn btn-info"
+            >
+              <BiCrop /> Autocrop
             </button>
             <button
               onClick={() => {
