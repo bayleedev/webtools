@@ -13,25 +13,21 @@ export interface PNGToolProps {
 }
 
 class PNGFaye {
+  height: number
+  width: number
   canvas: HTMLCanvasElement
-  fileContents: CanvasVideoFrame
   context: CanvasRenderingContext2D | null
 
   constructor (canvas: HTMLCanvasElement, fileContents: CanvasVideoFrame) {
     this.canvas = canvas
-    this.fileContents = fileContents
     this.context = this.canvas.getContext('2d', {
       willReadFrequently: true
     })
-  }
-
-  draw () {
-    if (!this.context) {
-      throw Error('Context not found')
+    this.width = this.canvas.width = fileContents.displayWidth;
+    this.height = this.canvas.height = fileContents.displayHeight;
+    if (this.context) {
+      this.context.drawImage(fileContents,0,0);
     }
-    this.canvas.width = this.fileContents.displayWidth;
-    this.canvas.height = this.fileContents.displayHeight;
-    this.context.drawImage(this.fileContents,0,0);
   }
 
   save () {
@@ -53,12 +49,124 @@ class PNGFaye {
   }
 
   inBounds (pixel: SelectedPixel) {
-    if (pixel.x >= 0 && pixel.x <= this.fileContents.displayWidth) {
-      if (pixel.y >= 0 && pixel.y <= this.fileContents.displayHeight) {
+    if (pixel.x >= 0 && pixel.x <= this.width) {
+      if (pixel.y >= 0 && pixel.y <= this.height) {
         return true
       }
     }
     return false
+  }
+
+  // crop if all transparent
+  autoCrop () {
+    const toCrop: {
+      top?: number
+      bottom?: number
+      left?: number
+      right?: number
+    }= {}
+    if (!this.context) {
+      throw Error('Context not found')
+    }
+    // left bar
+    for (let x = 0;x<this.width;x++) {
+      let isFullyTransparent = true
+      for (let y = 0;y<this.height;y++) {
+        const px:ImageData = this.context.getImageData(x, y, 1, 1)
+        if (px.data[3] !== 0) {
+          isFullyTransparent = false
+          break
+        }
+      }
+      if (isFullyTransparent) {
+        toCrop.left = x + 1
+      } else {
+        break
+      }
+    }
+    // top bar
+    for (let y = 0;y<this.height;y++) {
+      let isFullyTransparent = true
+      for (let x = 0;x<this.width;x++) {
+        const px:ImageData = this.context.getImageData(x, y, 1, 1)
+        if (px.data[3] !== 0) {
+          isFullyTransparent = false
+          break
+        }
+      }
+      if (isFullyTransparent) {
+        toCrop.top = y + 1
+      } else {
+        if (!toCrop.top) {
+          toCrop.top = 1
+        }
+        break
+      }
+    }
+    // right bar
+    for (let x = this.width;x>0;x--) {
+      let isFullyTransparent = true
+      for (let y = 0;y<this.height;y++) {
+        const px:ImageData = this.context.getImageData(x, y, 1, 1)
+        if (px.data[3] !== 0) {
+          isFullyTransparent = false
+          break
+        }
+      }
+      if (isFullyTransparent) {
+        if (toCrop.right) {
+          toCrop.right = Math.min(toCrop.right, x)
+        } else {
+          toCrop.right = x
+        }
+      } else {
+        if (!toCrop.right) {
+          toCrop.right = this.width
+        }
+        break
+      }
+    }
+    // bottom bar
+    for (let y = this.height;y>0;y--) {
+      let isFullyTransparent = true
+      for (let x = 0;x<this.width;x++) {
+        const px:ImageData = this.context.getImageData(x, y, 1, 1)
+        if (px.data[3] !== 0) {
+          isFullyTransparent = false
+          break
+        }
+      }
+      if (isFullyTransparent) {
+        if (toCrop.bottom) {
+          toCrop.bottom = Math.min(toCrop.bottom, y)
+        } else {
+          toCrop.bottom = y
+        }
+      } else {
+        if (!toCrop.bottom) {
+          toCrop.bottom = this.height
+        }
+        break
+      }
+    }
+    const sourceX = toCrop.left!
+    const sourceY = toCrop.top!
+    const sourceW = toCrop.right! - toCrop.left!
+    const sourceH = toCrop.bottom! - toCrop.top!
+    const destinationX = 0
+    const destinationY = 0
+    const destinationW = sourceW
+    const destinationH = sourceH
+    const tempCanvas = document.createElement('canvas')
+    const tempContext = tempCanvas.getContext('2d')!
+    tempCanvas.width = sourceW
+    tempCanvas.height = sourceH
+    tempContext.drawImage(this.canvas, sourceX, sourceY, sourceW, sourceH,
+        destinationX,destinationY, destinationW, destinationH);
+
+    this.width = this.canvas.width = sourceW
+    this.height = this.canvas.height = sourceH
+    this.context.drawImage(tempCanvas, 0, 0)
   }
 
   deleteMagic (pixelNeedle: SelectedPixel) {
@@ -121,8 +229,8 @@ class PNGFaye {
     }
     const deletePixel:ImageData = this.context.getImageData(pixel.x, pixel.y, 1, 1);
     const deleteColor:Uint8ClampedArray = deletePixel.data
-    for (let width = 0; width < this.fileContents.displayWidth;width++) {
-      for (let height = 0; height < this.fileContents.displayHeight;height++) {
+    for (let width = 0; width < this.width;width++) {
+      for (let height = 0; height < this.height;height++) {
         const currentPixel:ImageData = this.context.getImageData(width, height, 1, 1);
         const color:Uint8ClampedArray = currentPixel.data
         const hasR = color[0] === deleteColor[0]
@@ -180,9 +288,7 @@ export const PNGTool = (props: PNGToolProps) => {
     const fileContents: CanvasVideoFrame = fileFrames
     const canvas = reference.current
     if (canvas) {
-      const faye = new PNGFaye(canvas, fileContents)
-      faye.draw()
-      setFaye(faye)
+      setFaye(new PNGFaye(canvas, fileContents))
     }
   }
 
@@ -230,7 +336,7 @@ export const PNGTool = (props: PNGToolProps) => {
             <button
               onClick={() => {
                 if (faye) {
-                  alert('Greedy bastard...')
+                  faye.autoCrop()
                 }
               }}
               type="button"
