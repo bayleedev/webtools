@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ContentBox } from '../components/ContentBox';
 import { UploadBox } from '../components/UploadBox';
 import { ClickEvent, Loading, VideoFrame, CanvasVideoFrame } from '../types';
+import { MdSaveAlt } from 'react-icons/md';
 import './PNGTool.css';
 
 export interface PNGToolProps {
@@ -57,28 +58,57 @@ class PNGFaye {
     return false
   }
 
-  deleteMagic (pixel: SelectedPixel, _colorMatch?: ImageData) {
+  deleteMagic (pixelNeedle: SelectedPixel) {
     if (!this.context) {
       throw Error('Context not found')
     }
-    if (!this.inBounds(pixel)) {
+    if (!this.inBounds(pixelNeedle)) {
       return false
     }
-    const currentColor = this.context.getImageData(pixel.x, pixel.y, 1, 1)
-    const colorMatch = _colorMatch || currentColor
     const colorMatches = (a: ImageData, b: ImageData) => {
       if (a.data[0] !== b.data[0]) return false
       if (a.data[1] !== b.data[1]) return false
       if (a.data[2] !== b.data[2]) return false
       return true
     }
-    if (colorMatches(currentColor, colorMatch)) {
-      currentColor.data[3] = 0
-      this.context.putImageData(currentColor, pixel.x, pixel.y)
-      this.deleteMagic({ x: pixel.x - 1, y: pixel.y }, colorMatch)
-      this.deleteMagic({ x: pixel.x + 1, y: pixel.y }, colorMatch)
-      this.deleteMagic({ x: pixel.x, y: pixel.y - 1 }, colorMatch)
-      this.deleteMagic({ x: pixel.x, y: pixel.y + 1 }, colorMatch)
+    class UniquePixelSet {
+      iterator: Set<SelectedPixel>
+      unique: Map<number, Set<number>>
+      constructor () {
+        this.iterator = new Set<SelectedPixel>()
+        this.unique = new Map<number, Set<number>>()
+      }
+
+      add (pixel: SelectedPixel) {
+        const xMap = this.unique.get(pixel.x)
+        if (xMap) {
+          if (xMap.has(pixel.y)) {
+            return
+          } else {
+            xMap.add(pixel.y)
+          }
+        } else {
+          this.unique.set(pixel.x, new Set([pixel.y]))
+        }
+        this.iterator.add(pixel)
+      }
+    }
+    const pxIterator = new UniquePixelSet()
+    const colorToMatch: ImageData = this.context.getImageData(pixelNeedle.x, pixelNeedle.y, 1, 1)
+    pxIterator.add(pixelNeedle)
+    for (const pixel of pxIterator.iterator) {
+      if (!this.inBounds(pixel)) {
+        continue
+      }
+      const pixelColor: ImageData = this.context.getImageData(pixel.x, pixel.y, 1, 1)
+      if (colorMatches(pixelColor, colorToMatch)) {
+        pixelColor.data[3] = 0
+        this.context.putImageData(pixelColor, pixel.x, pixel.y)
+        pxIterator.add({ x: pixel.x - 1, y: pixel.y})
+        pxIterator.add({ x: pixel.x + 1, y: pixel.y})
+        pxIterator.add({ x: pixel.x, y: pixel.y + 1})
+        pxIterator.add({ x: pixel.x, y: pixel.y - 1})
+      }
     }
   }
 
@@ -171,8 +201,7 @@ export const PNGTool = (props: PNGToolProps) => {
         )) || ((loading === Loading.Loading) && (
           <p>Loading...</p>
         )) || ((loading === Loading.Loaded) && (
-          <div className="buttons">
-            { selectedPixel && (<p>Selected: x: {selectedPixel.x};x: {selectedPixel.y}</p>) }
+          <div className="button-set">
             <button
               onClick={() => {
                 if (faye && selectedPixel) {
@@ -180,9 +209,9 @@ export const PNGTool = (props: PNGToolProps) => {
                 }
               }}
               type="button"
-              className="btn btn-primary"
+              className="btn btn-info"
             >
-              Make selected color transparent
+              Transparent Selected Color
             </button>
             <button
               onClick={() => {
@@ -191,18 +220,18 @@ export const PNGTool = (props: PNGToolProps) => {
                 }
               }}
               type="button"
-              className="btn btn-primary"
+              className="btn btn-info"
             >
-              Make selected range transparent
+              Transparent Selected Range
             </button>
             <button
               onClick={() => {
                 faye && faye.save()
               }}
               type="button"
-              className="btn btn-primary"
+              className="btn btn-info"
             >
-              Save
+              <MdSaveAlt /> Save
             </button>
           </div>
         ))}
@@ -216,9 +245,16 @@ export const PNGTool = (props: PNGToolProps) => {
             handleError={handleError}
           />
         ) : (
-          <canvas
-            id={"viewport"}
-            ref={reference}></canvas>
+          <>
+            <canvas
+              id={"viewport"}
+              ref={reference}></canvas>
+            { selectedPixel ? (
+              <p>Selected: x: {selectedPixel.x};x: {selectedPixel.y}</p>
+            ) : (
+              <p>Selected <span className="text-danger">Click a pixel to make a selection</span></p>
+            )}
+          </>
         )}
       </>
     </ContentBox>
