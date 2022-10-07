@@ -5,16 +5,16 @@ import { decodeFile } from '../util/Image';
 import {
   ClipEvent,
   DataTransfer,
+  FileFrames,
   SyntheticChangeEvent,
   SyntheticDropEvent,
-  VideoFrame,
 } from '../types';
 
 import './UploadBox.css';
 
 export interface UploadBoxProps {
   allowedFileType: string|RegExp
-  handleUpload: (fileContents: VideoFrame) => void
+  handleUpload: (fileContents: FileFrames) => void
   handleError?: (error: Error) => void
   handleUploadStart?: (start: true) => void
 }
@@ -37,11 +37,8 @@ export const UploadBox = (props: UploadBoxProps) => {
         handleError(new Error('Only reading 1 file, total: ' + dataTransfer.files.length))
     }
     if (selectedFile.type.match(allowedFileType)) {
-      decodeFile(dataTransfer.files[0]).then((fileFrames: VideoFrame[]) => {
-        if (fileFrames.length > 1 && handleError) {
-          handleError(new Error('Only reading 1 frame, total: ' + fileFrames.length))
-        }
-        handleUpload(fileFrames[0])
+      decodeFile(dataTransfer.files[0]).then((fileFrames: FileFrames) => {
+        handleUpload(fileFrames)
       })
     }
   }, [allowedFileType, handleUploadStart, handleUpload, handleError])

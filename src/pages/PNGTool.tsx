@@ -2,7 +2,13 @@ import React, { useEffect, useState } from 'react';
 
 import { ContentBox } from '../components/ContentBox';
 import { UploadBox } from '../components/UploadBox';
-import { ClickEvent, Loading, VideoFrame, CanvasVideoFrame } from '../types';
+import {
+  CanvasVideoFrame,
+  ClickEvent,
+  FileFrames,
+  Loading,
+  VideoFrame
+} from '../types';
 import { MdSaveAlt } from 'react-icons/md';
 import { BiCrop } from 'react-icons/bi';
 import { GiOrange } from 'react-icons/gi';
@@ -16,26 +22,35 @@ class PNGFaye {
   height: number
   width: number
   canvas: HTMLCanvasElement
+  fileFrames: FileFrames
   context: CanvasRenderingContext2D | null
 
-  constructor (canvas: HTMLCanvasElement, fileContents: CanvasVideoFrame) {
+  constructor (canvas: HTMLCanvasElement, fileFrames: FileFrames) {
+    // Setup
+    this.fileFrames = fileFrames
     this.canvas = canvas
+    this.width = this.canvas.width = this.fileFrames.data[0].displayWidth;
+    this.height = this.canvas.height = this.fileFrames.data[0].displayHeight;
     this.context = this.canvas.getContext('2d', {
       willReadFrequently: true
     })
-    this.width = this.canvas.width = fileContents.displayWidth;
-    this.height = this.canvas.height = fileContents.displayHeight;
-    if (this.context) {
-      this.context.drawImage(fileContents,0,0);
-    }
+    // Draw
+    let i = 0
+    const intervalId = setInterval(() => {
+      if (this.context) {
+        this.context.drawImage(this.fileFrames.data[i++ % this.fileFrames.data.length],0,0);
+      } else {
+        clearInterval(intervalId)
+      }
+    }, 100)
   }
 
   save () {
-    const dataURL = this.canvas.toDataURL("image/png"); // TODO get real type
+    const dataURL = this.canvas.toDataURL(this.fileFrames.type); // TODO get real type
     let step = 1
     if (step === 1) {
       var a:any = document.createElementNS('http://www.w3.org/1999/xhtml', 'a')
-      a.download = 'download.png' // TODO get real filename
+      a.download = this.fileFrames.name
       a.rel = 'noopener'
       a.href = dataURL
       a.dispatchEvent(new MouseEvent('click'))
@@ -283,12 +298,11 @@ export const PNGTool = (props: PNGToolProps) => {
     setLoading(Loading.Error)
   }
 
-  const onHandleFile = (fileFrames: any|VideoFrame) => {
+  const onHandleFile = (fileFrames: FileFrames) => {
     setLoading(Loading.Loaded)
-    const fileContents: CanvasVideoFrame = fileFrames
     const canvas = reference.current
     if (canvas) {
-      setFaye(new PNGFaye(canvas, fileContents))
+      setFaye(new PNGFaye(canvas, fileFrames))
     }
   }
 

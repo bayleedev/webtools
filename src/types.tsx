@@ -84,7 +84,16 @@ export type ReadableStreamReadResult<T> = {
   value: undefined
 }
 
-export type FileBlob = {
+export type FileBase = {
+  name: string
   type: string
+}
+
+export type FileBlob = FileBase & {
   data: Uint8Array
+}
+
+export type FileFrames = FileBase & {
+  repetitionCount: number
+  data: CanvasVideoFrame[]
 }
