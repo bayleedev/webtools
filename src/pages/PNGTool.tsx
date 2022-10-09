@@ -32,15 +32,22 @@ class PNGFaye {
     this.context = this.canvas.getContext('2d', {
       willReadFrequently: true
     })
-    // Draw
+    // Draw single frame
+    if (this.context) {
+      this.context.drawImage(this.fileFrames.data[0],0,0);
+    }
+    /*
+    // Draw Animation
     let i = 0
     const intervalId = setInterval(() => {
       if (this.context) {
+        this.context.clearRect(0, 0, this.width, this.height);
         this.context.drawImage(this.fileFrames.data[i++ % this.fileFrames.data.length],0,0);
       } else {
         clearInterval(intervalId)
       }
     }, 100)
+    */
   }
 
   save () {
@@ -92,8 +99,11 @@ class PNGFaye {
         }
       }
       if (isFullyTransparent) {
-        toCrop.left = x + 1
+        toCrop.left = x
       } else {
+        if (!toCrop.left && toCrop.left !== 0) {
+          toCrop.left = -1 // 0, 0 is first pixel
+        }
         break
       }
     }
@@ -108,10 +118,10 @@ class PNGFaye {
         }
       }
       if (isFullyTransparent) {
-        toCrop.top = y + 1
+        toCrop.top = y
       } else {
-        if (!toCrop.top) {
-          toCrop.top = 1
+        if (!toCrop.top && toCrop.top !== 0) {
+          toCrop.top = -1 // 0,0 is first pixel
         }
         break
       }
@@ -162,23 +172,26 @@ class PNGFaye {
         break
       }
     }
-    const sourceX = toCrop.left!
-    const sourceY = toCrop.top!
-    const sourceW = toCrop.right! - toCrop.left!
-    const sourceH = toCrop.bottom! - toCrop.top!
+
+    const sourceX = toCrop.top! + 1
+    const sourceY = toCrop.top! + 1
+    const sourceW = toCrop.right! - toCrop.left! - 1
+    const sourceH = toCrop.bottom! - toCrop.top! - 1
     const destinationX = 0
     const destinationY = 0
     const destinationW = sourceW
     const destinationH = sourceH
+
     const tempCanvas = document.createElement('canvas')
     const tempContext = tempCanvas.getContext('2d')!
     tempCanvas.width = sourceW
     tempCanvas.height = sourceH
     tempContext.drawImage(this.canvas, sourceX, sourceY, sourceW, sourceH,
-        destinationX,destinationY, destinationW, destinationH);
+        destinationX, destinationY, destinationW, destinationH);
 
     this.width = this.canvas.width = sourceW
     this.height = this.canvas.height = sourceH
+    this.context.clearRect(0, 0, this.width, this.height);
     this.context.drawImage(tempCanvas, 0, 0)
   }
 
