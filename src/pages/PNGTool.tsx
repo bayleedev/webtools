@@ -3,15 +3,13 @@ import React, { useEffect, useState } from 'react';
 import { ContentBox } from '../components/ContentBox';
 import { UploadBox } from '../components/UploadBox';
 import {
-  CanvasVideoFrame,
   ClickEvent,
   FileFrames,
   Loading,
-  VideoFrame
 } from '../types';
 import { MdSaveAlt } from 'react-icons/md';
 import { BiCrop } from 'react-icons/bi';
-import { GiOrange } from 'react-icons/gi';
+import { GiFairyWand } from 'react-icons/gi';
 import { RiGhostSmileLine } from 'react-icons/ri';
 import './PNGTool.css';
 
@@ -345,7 +343,7 @@ export const PNGTool = (props: PNGToolProps) => {
               type="button"
               className="btn btn-info"
             >
-              <GiOrange /> Transparent Selected Range
+              <GiFairyWand /> Transparent Magic Wand
             </button>
             <button
               onClick={() => {

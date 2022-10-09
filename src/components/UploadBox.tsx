@@ -45,7 +45,7 @@ export const UploadBox = (props: UploadBoxProps) => {
 
   useEffect(() => {
     const handlePaste = (e: any|ClipEvent) => {
-      handleDataTransfer(e.dataTransfer)
+      handleDataTransfer(e.clipboardData)
     }
     window.addEventListener('paste', handlePaste);
     return () => {
