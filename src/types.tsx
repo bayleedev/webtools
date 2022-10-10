@@ -76,7 +76,7 @@ export type VideoFrame = {
   readonly timestamp?: number // microseconds
   readonly colorSpace: VideoColorSpace
   clone(): VideoFrame
-  copyTo(buffer: Uint8ClampedArray, options?: CopyToOptions): Promise<any>
+  copyTo(buffer: any, options?: CopyToOptions): Promise<any>
   close(): void
   allocationSize(options?: CopyToOptions): number
 }
@@ -107,6 +107,11 @@ export type FileBase = {
 
 export type FileBlob = FileBase & {
   data: Uint8Array
+}
+
+export type SelectedPixel = {
+  x: number
+  y: number
 }
 
 export type FileFrames = FileBase & {
