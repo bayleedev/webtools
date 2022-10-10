@@ -50,6 +50,20 @@ export type ClipEvent = {
   clipboardData: DataTransfer
 }
 
+// https://developer.mozilla.org/en-US/docs/Web/API/VideoFrame/copyTo
+export type CopyToOptions = {
+  rect?: {
+    x?: number
+    y?: number
+    width?: number
+    height?: number
+  }
+  layout?: {
+    offset?: number
+    stride?: number
+  }
+}
+
 export type VideoFrame = {
   readonly format?: string
   readonly codedWidth: number
@@ -62,7 +76,9 @@ export type VideoFrame = {
   readonly timestamp?: number // microseconds
   readonly colorSpace: VideoColorSpace
   clone(): VideoFrame
+  copyTo(buffer: Uint8ClampedArray, options?: CopyToOptions): Promise<any>
   close(): void
+  allocationSize(options?: CopyToOptions): number
 }
 
 // To get around some canvas specific issues

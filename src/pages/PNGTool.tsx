@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 
 import { ContentBox } from '../components/ContentBox';
 import { UploadBox } from '../components/UploadBox';
+import { Buffer } from '../components/Buffer';
 import {
   ClickEvent,
   FileFrames,
   Loading,
+  VideoFrame,
 } from '../types';
 import { MdSaveAlt } from 'react-icons/md';
 import { BiCrop } from 'react-icons/bi';
@@ -19,11 +21,22 @@ export interface PNGToolProps {
 class PNGFaye {
   height: number
   width: number
+  buffer?: Uint8ClampedArray
   canvas: HTMLCanvasElement
   fileFrames: FileFrames
   context: CanvasRenderingContext2D | null
 
   constructor (canvas: HTMLCanvasElement, fileFrames: FileFrames) {
+    // TODO copy all frames to buffers, maybe in a wrapper object?
+    // Make changes to frames, not canvas
+    // Pass "selected frame" to canvas like object
+    // fileFrames.data[0] is a VideoFrame
+    const activeVideoFrame: VideoFrame = fileFrames.data[0]
+    const buffer = new Uint8ClampedArray(activeVideoFrame.allocationSize());
+    activeVideoFrame.copyTo(buffer).then((a: any) => {
+      this.buffer = buffer
+    })
+
     // Setup
     this.fileFrames = fileFrames
     this.canvas = canvas
@@ -381,6 +394,16 @@ export const PNGTool = (props: PNGToolProps) => {
           </div>
         ))}
       </div>
+      <>
+        { faye && faye.buffer ? (
+          <Buffer
+            height={faye.height}
+            width={faye.width}
+            buffer={faye.buffer} />
+        ) : (
+          <p>No buffer</p>
+        ) }
+      </>
       <>
         {(loading === Loading.Unknown) ? (
           <UploadBox
