@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { ContentBox } from '../components/ContentBox';
 import { UploadBox } from '../components/UploadBox';
 import { Img } from '../components/Img';
-import { ImageFrame } from '../util/ImageFrame';
+import { ImageDataUtil } from '../util/ImageFrame';
 import {
   FileFrames,
   Loading,
@@ -37,7 +37,7 @@ export const PNGTool = (props: PNGToolProps) => {
     setFileName(fileFrames.name)
     setFileType(fileFrames.type)
     setFrames(fileFrames.data.map((frame: VideoFrame): ImageData => {
-      return ImageFrame.fromVideoFrame(frame)
+      return ImageDataUtil.fromVideoFrame(frame)
     }))
   }
 

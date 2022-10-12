@@ -4,7 +4,7 @@ import {
   SelectedPixel,
 } from '../types';
 import {
-  File
+  ImageDataUtil
 } from '../util/ImageFrame';
 import { MdSaveAlt } from 'react-icons/md';
 import { BiCrop } from 'react-icons/bi';
@@ -43,7 +43,7 @@ export const Img = (props: ImgProps) => {
   const deleteMagic = noop
   const autoCrop = noop
   const save = useCallback(() => {
-    File.saveFlatPNG({
+    ImageDataUtil.toFlatPNG({
       type: fileType,
       name: fileName,
       data: selectedFrame,

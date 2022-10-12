@@ -3,7 +3,7 @@ import {
   VideoFrame,
 } from '../types';
 
-export class ImageFrame {
+export class ImageDataUtil {
   static fromVideoFrame(frame: VideoFrame): ImageData {
     const width = frame.displayWidth;
     const height = frame.displayHeight;
@@ -14,13 +14,8 @@ export class ImageFrame {
     tempContext.drawImage(frame as CanvasVideoFrame, 0, 0)
     return tempContext.getImageData(0, 0, width, height)
   }
-}
 
-export class Select {
-}
-
-export class File {
-  static createCanvas(data: ImageData): HTMLCanvasElement {
+  static toCanvas(data: ImageData): HTMLCanvasElement {
     const tempCanvas = document.createElement('canvas')
     const tempContext = tempCanvas.getContext('2d')!
     tempCanvas.height = data.height
@@ -29,12 +24,12 @@ export class File {
     return tempCanvas
   }
 
-  static saveFlatPNG(options: {
+  static toFlatPNG(options: {
     type: string,
     name: string,
     data: ImageData
   }): void {
-    const tempCanvas = File.createCanvas(options.data)
+    const tempCanvas = ImageDataUtil.toCanvas(options.data)
     const dataURL = tempCanvas.toDataURL(options.type);
     var a:any = document.createElementNS('http://www.w3.org/1999/xhtml', 'a')
     a.download = options.name
