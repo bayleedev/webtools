@@ -31,7 +31,7 @@ export class ImageDataUtil {
   }): void {
     const tempCanvas = ImageDataUtil.toCanvas(options.data)
     const dataURL = tempCanvas.toDataURL(options.type);
-    var a:any = document.createElementNS('http://www.w3.org/1999/xhtml', 'a')
+    const a:HTMLAnchorElement = document.createElement('a')
     a.download = options.name
     a.rel = 'noopener'
     a.href = dataURL

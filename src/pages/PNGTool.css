@@ -5,11 +5,17 @@ canvas {
   filter: drop-shadow(0 0 0.75rem violet);
 }
 
+.button-set {
+  text-align: center;
+}
+
 .button-set .btn {
+  padding: 5px 12px;
   margin: 5px;
-  font-size: 11pt;
+  font-size: 10pt;
+  text-transform: initial;
 }
 
 .button-set .btn svg {
-  font-size: 13pt
+  font-size: 12pt
 }
