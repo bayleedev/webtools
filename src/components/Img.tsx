@@ -28,6 +28,7 @@ export interface ImgProps {
 export const Img = (props: ImgProps) => {
   const {
     frames,
+    setFrames,
     fileName,
     fileType,
   } = props
@@ -39,9 +40,17 @@ export const Img = (props: ImgProps) => {
     alert('Not yet implemented')
   }
 
-  const deleteColor = noop
+  const deleteColor = useCallback((selectedPixel: SelectedPixel) => {
+    console.log(setFrames, frames, selectedFrameIdx)
+    /**
+    setFrames(frames.map((frame: ImageData): any => {
+    })
+     */
+  }, [selectedFrameIdx, frames, setFrames])
+
   const deleteMagic = noop
   const autoCrop = noop
+
   const save = useCallback(() => {
     ImageDataUtil.toFlatPNG({
       type: fileType,

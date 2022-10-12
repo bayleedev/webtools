@@ -3,6 +3,8 @@ import {
   VideoFrame,
 } from '../types';
 
+const VALUES_PER_PIXEL = 4
+
 export class ImageDataUtil {
   static fromVideoFrame(frame: VideoFrame): ImageData {
     const width = frame.displayWidth;
@@ -15,6 +17,22 @@ export class ImageDataUtil {
     return tempContext.getImageData(0, 0, width, height)
   }
 
+  // Gives you the starting index of a pixel given a x,y coordinate
+  static pxToIndex(options: {
+    x: number,
+    y: number,
+    data: ImageData,
+  }): number {
+    const { height, width } = options.data
+    if (options.x <= 0 || options.y <= 0) throw new RangeError()
+    if (options.x > width) throw new RangeError()
+    if (options.y > height) throw new RangeError()
+    return (
+      (options.x - 1) +
+      ((options.y - 1) * width)
+    ) * VALUES_PER_PIXEL
+  }
+
   static toCanvas(data: ImageData): HTMLCanvasElement {
     const tempCanvas = document.createElement('canvas')
     const tempContext = tempCanvas.getContext('2d')!
@@ -24,10 +42,19 @@ export class ImageDataUtil {
     return tempCanvas
   }
 
+  static toRGBA(options: {
+    x: number,
+    y: number
+    data: ImageData,
+  }): Uint8Array {
+    const rgba = new Uint8Array(4)
+    return rgba
+  }
+
   static toFlatPNG(options: {
     type: string,
     name: string,
-    data: ImageData
+    data: ImageData,
   }): void {
     const tempCanvas = ImageDataUtil.toCanvas(options.data)
     const dataURL = tempCanvas.toDataURL(options.type);
