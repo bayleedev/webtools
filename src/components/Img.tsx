@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Buffer } from './Buffer';
 import {
   SelectedPixel,
 } from '../types';
+import {
+  File
+} from '../util/ImageFrame';
 import { MdSaveAlt } from 'react-icons/md';
 import { BiCrop } from 'react-icons/bi';
 import { GiFairyWand } from 'react-icons/gi';
@@ -15,16 +18,19 @@ import {
 } from 'react-icons/ai';
 
 export interface ImgProps {
+  fileName: string
+  fileType: string
+  repetitionCount: number
   frames: ImageData[]
   setFrames: (frames: ImageData[]) => void
 }
 
-/*
-)) || ((loading === Loading.Loaded) && (
-*/
-
 export const Img = (props: ImgProps) => {
-  const { frames } = props
+  const {
+    frames,
+    fileName,
+    fileType,
+  } = props
   const [selectedPixel, setSelectedPixel] = useState<SelectedPixel>();
   const [selectedFrameIdx, setSelectedFrameIdx] = useState<number>(0);
   const selectedFrame = frames[selectedFrameIdx]
@@ -36,7 +42,13 @@ export const Img = (props: ImgProps) => {
   const deleteColor = noop
   const deleteMagic = noop
   const autoCrop = noop
-  const save = noop
+  const save = useCallback(() => {
+    File.saveFlatPNG({
+      type: fileType,
+      name: fileName,
+      data: selectedFrame,
+    })
+  }, [fileType, fileName, selectedFrame])
 
   return (
     <div className="row">

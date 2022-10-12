@@ -18,6 +18,9 @@ export const PNGTool = (props: PNGToolProps) => {
   const [error, setError] = useState<Error>();
   const [loading, setLoading] = useState<Loading>(Loading.Unknown);
   const [frames, setFrames] = useState<ImageData[]>();
+  const [repetitionCount, setRepetitionCount] = useState<number>(0);
+  const [fileName, setFileName] = useState<string>();
+  const [fileType, setFileType] = useState<string>();
 
   const handleStart = (starting: true) => {
     setLoading(Loading.Loading)
@@ -30,6 +33,9 @@ export const PNGTool = (props: PNGToolProps) => {
 
   const onHandleFile = (fileFrames: FileFrames) => {
     setLoading(Loading.Loaded)
+    setRepetitionCount(fileFrames.repetitionCount)
+    setFileName(fileFrames.name)
+    setFileType(fileFrames.type)
     setFrames(fileFrames.data.map((frame: VideoFrame): ImageData => {
       return ImageFrame.fromVideoFrame(frame)
     }))
@@ -57,6 +63,9 @@ export const PNGTool = (props: PNGToolProps) => {
       <>
         {(loading === Loading.Loaded && frames) && (
           <Img
+            fileName={fileName!}
+            fileType={fileType!}
+            repetitionCount={repetitionCount}
             frames={frames}
             setFrames={setFrames}
           />

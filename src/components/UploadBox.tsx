@@ -1,7 +1,7 @@
 import React, { useCallback,useEffect, useState } from 'react';
 import { FiDownload } from 'react-icons/fi';
 
-import { decodeFile } from '../util/Image';
+import { decodeFile } from '../util/Upload';
 import {
   ClipEvent,
   DataTransfer,
