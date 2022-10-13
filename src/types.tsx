@@ -64,6 +64,15 @@ export type CopyToOptions = {
   }
 }
 
+export type RGBAColor = {
+  red: number
+  green: number
+  blue: number
+  alpha: number
+}
+
+export type RGBColor = Pick<RGBAColor, 'red'|'green'|'blue'>
+
 export type VideoFrame = {
   readonly format?: string
   readonly codedWidth: number
@@ -109,7 +118,7 @@ export type FileBlob = FileBase & {
   data: Uint8Array
 }
 
-export type SelectedPixel = {
+export type Pixel = {
   x: number
   y: number
 }

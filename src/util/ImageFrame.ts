@@ -3,7 +3,7 @@ import {
   VideoFrame,
 } from '../types';
 
-const VALUES_PER_PIXEL = 4
+export const VALUES_PER_PIXEL = 4
 
 export class ImageDataUtil {
   static fromVideoFrame(frame: VideoFrame): ImageData {
@@ -42,15 +42,8 @@ export class ImageDataUtil {
     return tempCanvas
   }
 
-  static toRGBA(options: {
-    x: number,
-    y: number
-    data: ImageData,
-  }): Uint8Array {
-    const rgba = new Uint8Array(4)
-    return rgba
-  }
-
+  // prompts the user to save the input canvas as the original format uploaded
+  // TODO support frames
   static toFlatPNG(options: {
     type: string,
     name: string,

@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import {
   ClickEvent,
-  SelectedPixel,
+  Pixel,
 } from '../types';
 
 export interface BufferProps {
   buffer: ImageData
-  setSelectedPixel: (pixel: SelectedPixel) => void
+  setPixel: (pixel: Pixel) => void
 }
 
 export const Buffer = (props: BufferProps) => {
   const [reference] = useState(React.createRef<HTMLCanvasElement>());
   const {
-    setSelectedPixel,
+    setPixel,
     buffer,
   } = props
 
@@ -25,13 +25,13 @@ export const Buffer = (props: BufferProps) => {
       const bounding = canvas.getBoundingClientRect();
       const x = event.clientX - bounding.left;
       const y = event.clientY - bounding.top;
-      setSelectedPixel({x, y})
+      setPixel({x, y})
     }
     canvas.addEventListener('click', handleClick);
     return () => {
       canvas.removeEventListener('click', handleClick);
     }
-  }, [reference, setSelectedPixel])
+  }, [reference, setPixel])
 
   useEffect(() => {
     const canvas = reference.current

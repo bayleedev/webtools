@@ -1,11 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import { Buffer } from './Buffer';
-import {
-  SelectedPixel,
-} from '../types';
-import {
-  ImageDataUtil
-} from '../util/ImageFrame';
+import { Pixel } from '../types';
+import { ImageDataUtil } from '../util/ImageFrame';
+import { TransactionalImageDataCollection } from '../util/TransactionalImageData';
 import { MdSaveAlt } from 'react-icons/md';
 import { BiCrop } from 'react-icons/bi';
 import { GiFairyWand } from 'react-icons/gi';
@@ -32,20 +29,27 @@ export const Img = (props: ImgProps) => {
     fileName,
     fileType,
   } = props
-  const [selectedPixel, setSelectedPixel] = useState<SelectedPixel>();
+  const [selectedPixel, _setSelectedPixel] = useState<Pixel>();
   const [selectedFrameIdx, setSelectedFrameIdx] = useState<number>(0);
+  const setSelectedPixel = (pixel: Pixel) => {
+    _setSelectedPixel({
+      x: Math.round(pixel.x),
+      y: Math.round(pixel.y),
+    })
+  }
   const selectedFrame = frames[selectedFrameIdx]
 
   const noop = (a?: any) => {
     alert('Not yet implemented')
   }
 
-  const deleteColor = useCallback((selectedPixel: SelectedPixel) => {
-    console.log(setFrames, frames, selectedFrameIdx)
-    /**
-    setFrames(frames.map((frame: ImageData): any => {
-    })
-     */
+  const deleteColor = useCallback((pixel: Pixel) => {
+    const transaction = new TransactionalImageDataCollection(frames)
+    const color = transaction.get(selectedFrameIdx).pxToRGBAColor(pixel)
+    for (const setter of transaction.findByColor(color)) {
+        setter({ alpha: 0 })
+    }
+    setFrames(transaction.commit())
   }, [selectedFrameIdx, frames, setFrames])
 
   const deleteMagic = noop
@@ -62,7 +66,6 @@ export const Img = (props: ImgProps) => {
   return (
     <div className="row">
       {selectedPixel && (
-        /* TODO: This should be visible on the image */
         <div className="col-lg-12 col-12">
           <p>
             Selected Pixel: x {selectedPixel.x}; y {selectedPixel.y}
@@ -114,7 +117,7 @@ export const Img = (props: ImgProps) => {
       <div className="col-lg-10 col-10">
         <Buffer
           buffer={selectedFrame}
-          setSelectedPixel={setSelectedPixel}
+          setPixel={setSelectedPixel}
         />
         { frames.length > 1 && (
           <div style={{ width: selectedFrame.width}} className="text-center">
