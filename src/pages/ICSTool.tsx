@@ -17,7 +17,7 @@ BEGIN:VCALENDAR
 VERSION:2.0
 BEGIN:VEVENT
 CLASS:PUBLIC
-DESCRIPTION:Foobar\nDate and Time - Sep 30\, 2022 12:00 AM to 12:00 AM\nVenue - 1111 Winchester Blvd\, Portland OR\, 97232\nfoobaz\nSUMMARY: meow\nLOCATION: rawr\n
+DESCRIPTION:Foobar\nDate and Time - Sep 30\\, 2022 12:00 AM to 12:00 AM\nVenue - 1111 Winchester Blvd\\, Portland OR\\, 97232\nfoobaz\nSUMMARY: meow\nLOCATION: rawr\n
 DTSTART:20220930T070000Z
 DTEND:20220930T070000Z
 LOCATION:1111 Winchester Blvd, Portland OR, 97232
