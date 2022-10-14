@@ -1,6 +1,7 @@
 import {
-  VALUES_PER_PIXEL,
+  ImageDataUtil,
 } from '../util/ImageFrame';
+import { UniquePixelSet } from './UniquePixelSet';
 import {
   RGBAColor,
   RGBColor,
@@ -26,6 +27,15 @@ export class TransactionalImageData {
     )
   }
 
+  idxToRGBAColor(start: number): RGBAColor {
+    return {
+      red: this.data[start + 0],
+      green: this.data[start + 1],
+      blue: this.data[start + 2],
+      alpha: this.data[start + 3],
+    }
+  }
+
   pxToRGBAColor(pixel: Pixel): RGBAColor {
     const start = this._pxToIdx(pixel)
     return {
@@ -36,44 +46,82 @@ export class TransactionalImageData {
     }
   }
 
+  // TODO color helper
+  // TODO support match%
+  _colorMatch(a: RGBColor, b: RGBColor): boolean {
+    if (a.red !== b.red) {
+      return false
+    }
+    if (a.green !== b.green) {
+      return false
+    }
+    if (a.blue !== b.blue) {
+      return false
+    }
+    return true
+  }
+
+  _editPixel(px: Pixel) {
+    const pxIdx = this._pxToIdx(px)
+    return this._editPixelByIdx(pxIdx)
+  }
+
+  _editPixelByIdx(pxIdx: number) {
+    return (newColor: Partial<RGBAColor>): void => {
+      if (newColor.red !== undefined) {
+        this.data[pxIdx + 0] = newColor.red
+      }
+      if (newColor.green !== undefined) {
+        this.data[pxIdx + 1] = newColor.green
+      }
+      if (newColor.blue !== undefined) {
+        this.data[pxIdx + 2] = newColor.blue
+      }
+      if (newColor.alpha !== undefined) {
+        this.data[pxIdx + 3] = newColor.alpha
+      }
+    }
+  }
+
+  *findRangeByPixel(startingPixel: Pixel) {
+    const pxSet = new UniquePixelSet([startingPixel])
+    const startingColor = this.pxToRGBAColor(startingPixel)
+    const imgData = { width: this.width, height: this.height }
+    for (const px of pxSet.iterator) {
+      if (!ImageDataUtil.inBounds({ ...px, data: imgData })) {
+        continue
+      }
+      const foundColor = this.pxToRGBAColor(px)
+      if (this._colorMatch(startingColor, foundColor)) {
+        pxSet.add({ x: px.x - 1, y: px.y})
+        pxSet.add({ x: px.x + 1, y: px.y})
+        pxSet.add({ x: px.x, y: px.y + 1})
+        pxSet.add({ x: px.x, y: px.y - 1})
+        yield(this._editPixel(px))
+      }
+    }
+  }
+
   *findByColor(color: RGBColor) {
     const totalPixels = this.data.length / 4
     for (let pixel = 0;pixel < totalPixels;pixel++) {
       const pxIdx = pixel * 4
-      if (color.red !== this.data[pxIdx + 0]) {
+      const pxColor = this.idxToRGBAColor(pxIdx)
+      if (!this._colorMatch(color, pxColor)) {
         continue
       }
-      if (color.green !== this.data[pxIdx + 1]) {
-        continue
-      }
-      if (color.blue !== this.data[pxIdx + 2]) {
-        continue
-      }
-      yield((yieldOptions: Partial<RGBAColor>): void => {
-        if (yieldOptions.red !== undefined) {
-          this.data[pxIdx + 0] = yieldOptions.red
-        }
-        if (yieldOptions.green !== undefined) {
-          this.data[pxIdx + 1] = yieldOptions.green
-        }
-        if (yieldOptions.blue !== undefined) {
-          this.data[pxIdx + 2] = yieldOptions.blue
-        }
-        if (yieldOptions.alpha !== undefined) {
-          this.data[pxIdx + 3] = yieldOptions.alpha
-        }
-      })
+      yield(this._editPixelByIdx(pxIdx))
     }
   }
 
   _pxToIdx(pixel: Pixel): number {
-    if (pixel.x <= 0 || pixel.y <= 0) throw new RangeError()
-    if (pixel.x > this.width) throw new RangeError()
-    if (pixel.y > this.height) throw new RangeError()
-    return (
-      (pixel.x - 1) +
-      ((pixel.y - 1) * this.width)
-    ) * VALUES_PER_PIXEL
+    return ImageDataUtil.pxToIndex({
+      ...pixel,
+      data: {
+        width: this.width,
+        height: this.height,
+      },
+    })
   }
 }
 

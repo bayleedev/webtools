@@ -17,16 +17,28 @@ export class ImageDataUtil {
     return tempContext.getImageData(0, 0, width, height)
   }
 
+  static inBounds(options: {
+    x: number,
+    y: number,
+    data: { width: number, height: number },
+  }): boolean {
+    const { height, width } = options.data
+    if (options.x <= 0 || options.y <= 0) return false
+    if (options.x > width) return false
+    if (options.y > height) return false
+    return true
+  }
+
   // Gives you the starting index of a pixel given a x,y coordinate
   static pxToIndex(options: {
     x: number,
     y: number,
-    data: ImageData,
+    data: { width: number, height: number },
   }): number {
-    const { height, width } = options.data
-    if (options.x <= 0 || options.y <= 0) throw new RangeError()
-    if (options.x > width) throw new RangeError()
-    if (options.y > height) throw new RangeError()
+    const { width } = options.data
+    if (!ImageDataUtil.inBounds(options)) {
+      throw new RangeError()
+    }
     return (
       (options.x - 1) +
       ((options.y - 1) * width)

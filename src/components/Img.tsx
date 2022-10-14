@@ -2,7 +2,10 @@ import React, { useCallback, useState } from 'react';
 import { Buffer } from './Buffer';
 import { Pixel } from '../types';
 import { ImageDataUtil } from '../util/ImageFrame';
-import { TransactionalImageDataCollection } from '../util/TransactionalImageData';
+import {
+  TransactionalImageData,
+  TransactionalImageDataCollection,
+} from '../util/TransactionalImageData';
 import { MdSaveAlt } from 'react-icons/md';
 import { BiCrop } from 'react-icons/bi';
 import { GiFairyWand } from 'react-icons/gi';
@@ -52,7 +55,18 @@ export const Img = (props: ImgProps) => {
     setFrames(transaction.commit())
   }, [selectedFrameIdx, frames, setFrames])
 
-  const deleteMagic = noop
+  const deleteMagic = useCallback((pixel: Pixel) => {
+    const transaction = new TransactionalImageData(selectedFrame)
+    for (const setter of transaction.findRangeByPixel(pixel)) {
+        setter({ alpha: 0 })
+    }
+    setFrames([
+      ...frames.slice(0, selectedFrameIdx),
+      transaction.commit(),
+      ...frames.slice(selectedFrameIdx + 1),
+    ])
+  }, [selectedFrame, selectedFrameIdx, frames, setFrames])
+
   const autoCrop = noop
 
   const save = useCallback(() => {
