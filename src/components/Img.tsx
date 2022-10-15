@@ -34,16 +34,12 @@ export const Img = (props: ImgProps) => {
   } = props
   const [selectedPixel, _setSelectedPixel] = useState<Pixel>();
   const [selectedFrameIdx, setSelectedFrameIdx] = useState<number>(0);
+  const selectedFrame = frames[selectedFrameIdx]
   const setSelectedPixel = (pixel: Pixel) => {
     _setSelectedPixel({
       x: Math.round(pixel.x),
       y: Math.round(pixel.y),
     })
-  }
-  const selectedFrame = frames[selectedFrameIdx]
-
-  const noop = (a?: any) => {
-    alert('Not yet implemented')
   }
 
   const deleteColor = useCallback((pixel: Pixel) => {
@@ -67,7 +63,15 @@ export const Img = (props: ImgProps) => {
     ])
   }, [selectedFrame, selectedFrameIdx, frames, setFrames])
 
-  const autoCrop = noop
+  const autoCrop = useCallback(() => {
+    const transaction = new TransactionalImageData(selectedFrame)
+    transaction.autoCrop();
+    setFrames([
+      ...frames.slice(0, selectedFrameIdx),
+      transaction.commit(),
+      ...frames.slice(selectedFrameIdx + 1),
+    ])
+  }, [selectedFrame, selectedFrameIdx, frames, setFrames])
 
   const save = useCallback(() => {
     ImageDataUtil.toFlatPNG({
