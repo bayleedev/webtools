@@ -10,10 +10,10 @@ import {
 } from '../types';
 
 export type Bounds = {
-  maxX: number
-  maxY: number
-  minX: number
-  minY: number
+  startX: number
+  startY: number
+  endX: number
+  endY: number
 }
 
 export type CropBounds = Bounds & {
@@ -44,7 +44,7 @@ export class TransactionalImageData {
     if (x > this.width) {
       throw RangeError()
     }
-    for(let y = 0; y < this.height; y++) {
+    for (let y = 1; y <= this.height; y++) {
       const { alpha } = this.pxToRGBAColor({ y, x })
       if (alpha > 0) {
         return false
@@ -57,7 +57,7 @@ export class TransactionalImageData {
     if (y > this.height) {
       throw RangeError()
     }
-    for(let x = 0; x < this.width; x++) {
+    for (let x = 1; x <= this.width; x++) {
       const { alpha } = this.pxToRGBAColor({ y, x })
       if (alpha > 0) {
         return false
@@ -68,17 +68,21 @@ export class TransactionalImageData {
 
   autoCrop () {
     const cropBounds = this.getOpaqueBounds()
+    console.log(cropBounds)
     return this.crop(cropBounds);
   }
 
   crop (cropBounds: CropBounds) {
     const newDataSize = cropBounds.height * cropBounds.width * VALUES_PER_PIXEL
     const newData: Uint8ClampedArray = new Uint8ClampedArray(newDataSize)
-    for (let y = cropBounds.maxY; y < cropBounds.minY; y++) {
-      const nextIdx = (cropBounds.maxY - y) * cropBounds.width * VALUES_PER_PIXEL
-      const prevStartIdx = this._pxToIdx({y, x: cropBounds.minX})
-      const prevEndIdx = prevStartIdx + cropBounds.width
-      newData.set(this.data.slice(prevStartIdx, prevEndIdx), nextIdx);
+    for (let y = 0; y < cropBounds.height; y++) {
+      const writePos = y * cropBounds.width * VALUES_PER_PIXEL
+      const prevStartIdx = this._pxToIdx({
+        y: y + cropBounds.startY,
+        x: cropBounds.startX,
+      })
+      const prevEndIdx = prevStartIdx + (cropBounds.width * VALUES_PER_PIXEL)
+      newData.set(this.data.slice(prevStartIdx, prevEndIdx), writePos);
     }
     this.height = cropBounds.height
     this.width = cropBounds.width
@@ -87,52 +91,48 @@ export class TransactionalImageData {
 
   getOpaqueBounds (): CropBounds {
     const bounds: Bounds = {
-      minX: 0,
-      minY: 0,
-      maxX: this.width - 1,
-      maxY: this.height - 1,
+      startX: 1,
+      startY: 1,
+      endX: this.width,
+      endY: this.height,
     }
 
     // Get left bounds
-    for(let x = 0; x < this.width; x++) {
-      if (this._isColEmpty(x)) {
-        bounds.minX = x
-      } else {
+    for(let x = 1; x < this.width; x++) {
+      if (!this._isColEmpty(x)) {
+        bounds.startX = x
         break
       }
     }
 
     // Get right bounds
-    for(let x = this.width - 1; x >= 0; x--) {
-      if (this._isColEmpty(x)) {
-        bounds.maxX = x
-      } else {
+    for(let x = this.width; x > 1; x--) {
+      if (!this._isColEmpty(x)) {
+        bounds.endX = x
         break
       }
     }
 
     // Get top bounds
-    for(let y = 0; y < this.height; y++) {
-      if (this._isRowEmpty(y)) {
-        bounds.minY = y
-      } else {
+    for(let y = 1; y < this.height; y++) {
+      if (!this._isRowEmpty(y)) {
+        bounds.startY = y
         break
       }
     }
 
     // Get bottom bounds
-    for(let y = this.height - 1; y >= 0; y--) {
-      if (this._isRowEmpty(y)) {
-        bounds.maxY = y
-      } else {
+    for(let y = this.height; y > 1; y--) {
+      if (!this._isRowEmpty(y)) {
+        bounds.endY = y
         break
       }
     }
 
     return {
       ...bounds,
-      height: (bounds.maxX - bounds.minX) + 1,
-      width: (bounds.maxY - bounds.minY) + 1,
+      width: (bounds.endX - bounds.startX) + 1,
+      height: (bounds.endY - bounds.startY) + 1,
     }
   }
 
