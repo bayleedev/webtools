@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/webtools/static/css/main.c0f098e8.css",
+    "main.js": "/webtools/static/js/main.09aa978d.js",
+    "index.html": "/webtools/index.html",
+    "main.c0f098e8.css.map": "/webtools/static/css/main.c0f098e8.css.map",
+    "main.09aa978d.js.map": "/webtools/static/js/main.09aa978d.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c0f098e8.css",
+    "static/js/main.09aa978d.js"
+  ]
+}
